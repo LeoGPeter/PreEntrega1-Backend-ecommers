@@ -38,17 +38,12 @@ class ProductManager {
         return productById
     };
 
-    updateProduct = async ({ id, product }) => {
+    updateProduct = async ( id, product ) => {
         let productById = await this.exist(id);
-        if (!productById) {
-            return "Producto no encontrado";
-        }
-    
+        if (!productById)return "Producto no encontrado";
         let products = await this.readProducts();
         let updatedProducts = products.map((p) => (p.id === id ? { ...p, ...product } : p));
-    
         await this.writeProducts(updatedProducts);
-    
         return "Producto Actualizado";
     };
     
