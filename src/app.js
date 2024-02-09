@@ -5,9 +5,15 @@ import { engine } from "express-handlebars";
 import * as path from "path";
 import __dirname from "./utils.js";
 import ProductManager from "./controllers/ProductManager.js";
+import http from "http";
+import { Server } from "socket.io";
+import viewsRouter from './router/views.routes.js';
+
+const product = new ProductManager();
 
 const app = express();
-const product = new ProductManager();
+const httpServer = http.createServer(app)
+const io = new Server(httpServer)
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
@@ -18,17 +24,23 @@ app.set("views", path.resolve(__dirname + "/views"))
 
 app.use("/", express.static(__dirname + "/public"))
 
-app.get("/", async (req , res) => {
-    let allProducts = await product.getProducts()
-    res.render("Home",{
-       titles: "Express Avanzado / handlebars",
-       products: allProducts
+app.use("/", viewsRouter)
+
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    socket.on("disconnected", () => {
+        console.log("a user disconnected");
+    })
+
+    socket.on("message", (msg) => {
+        io.emit("message", msg);
     })
 })
 
 app.use("/api/products", ProductRouter)
 app.use("/api/cart", CartRouter)
 
-app.listen(8080, () => {
-console.log("Aplicacion en el puerto 8080")
-});
+httpServer.listen(8080, () => {
+    console.log(`Server Connection`);
+  });
